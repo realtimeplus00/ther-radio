@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ÆTHER RADIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080810;--s1:#0f0f1a;--s2:#161625;--s3:#1e1e30;
+  --border:#252538;--border2:#32324a;
+  --accent:#00f5a0;--accent2:#00c8ff;
+  --text:#e2e2f0;--muted:#55556e;--muted2:#7a7a99;
+  --red:#ff4466;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,245,160,0.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.app{max-width:960px;margin:0 auto;padding:28px 20px 60px;position:relative;z-index:1;}
+
+/* HEADER */
+header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(0,245,160,0.3));}
+.logo-sub{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:3px;margin-top:-4px;}
+.live-badge{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);padding:8px 16px;border-radius:100px;font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted2);white-space:nowrap;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:all .3s;}
+.live-dot.on{background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.4s infinite;}
+.live-dot.loading{background:var(--accent);animation:blink .5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* PLAYER */
+.player-card{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:20px;position:relative;overflow:hidden;}
+.player-card::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;background:radial-gradient(circle,rgba(0,245,160,0.07) 0%,transparent 70%);pointer-events:none;}
+.player-top{display:flex;gap:18px;align-items:flex-start;}
+.station-art{width:72px;height:72px;border-radius:14px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;overflow:hidden;}
+.station-art img{width:100%;height:100%;object-fit:cover;border-radius:13px;}
+.player-info{flex:1;min-width:0;}
+.np-tag{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:3px;color:var(--muted);margin-bottom:6px;}
+.np-name{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--accent);line-height:1;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.np-meta{font-size:.78rem;color:var(--muted2);margin-bottom:6px;}
+.np-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.np-tag-pill{font-size:.68rem;padding:2px 9px;border-radius:100px;background:var(--s3);border:1px solid var(--border2);color:var(--muted2);font-family:'Space Mono',monospace;}
+/* NOW PLAYING TRACK */
+.track-wrap{margin-top:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--border2);border-radius:12px;display:none;animation:fadeIn .4s ease;transition:opacity .22s ease;}
+.track-wrap.show{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.track-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:3px;color:var(--muted);margin-bottom:5px;}
+.track-title{font-size:.9rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.track-artist{font-size:.75rem;color:var(--accent2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.track-spin{display:inline-block;width:10px;height:10px;border:1.5px solid var(--border2);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.viz-wrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+#viz{width:100%;height:48px;display:block;border-radius:4px;}
+
+/* CONTROLS */
+.controls{display:flex;align-items:center;gap:14px;background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:20px;flex-wrap:wrap;}
+.ctrl-left{display:flex;align-items:center;gap:12px;}
+.btn-play{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;box-shadow:0 0 20px rgba(0,245,160,.25);}
+.btn-play:hover{transform:scale(1.08);box-shadow:0 0 30px rgba(0,245,160,.4);}
+.btn-play svg{color:#060610;}
+.btn-stop{width:38px;height:38px;border-radius:50%;background:transparent;border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted2);transition:all .2s;}
+.btn-stop:hover{border-color:var(--red);color:var(--red);}
+.vol-wrap{display:flex;align-items:center;gap:10px;flex:1;min-width:180px;}
+.vol-ico{color:var(--muted);flex-shrink:0;}
+input[type=range]{-webkit-appearance:none;flex:1;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(0,245,160,.5);}
+.vol-num{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);width:30px;text-align:right;}
+.btn-fav{width:38px;height:38px;border-radius:50%;background:transparent;border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted2);transition:all .2s;}
+.btn-fav:hover{border-color:var(--red);color:var(--red);}
+.btn-fav.on{border-color:var(--red);color:var(--red);background:rgba(255,68,102,.1);}
+.error-bar{background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.25);border-radius:10px;padding:9px 14px;font-size:.78rem;color:var(--red);font-family:'Space Mono',monospace;margin-bottom:16px;display:none;}
+.error-bar.show{display:block;}
+
+/* SEARCH */
+.search-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:10px;flex:1;min-width:220px;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:0 16px;transition:border-color .2s;}
+.search-box:focus-within{border-color:var(--accent);}
+.search-box svg{color:var(--muted);flex-shrink:0;}
+.search-box input{background:transparent;border:none;outline:none;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;width:100%;padding:13px 0;}
+.search-box input::placeholder{color:var(--muted);}
+.btn-search{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;padding:13px 22px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;color:#060610;white-space:nowrap;transition:all .2s;}
+.btn-search:hover{opacity:.85;}
+.btn-search:disabled{opacity:.4;cursor:not-allowed;}
+
+/* FILTERS */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.filter-label{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:2px;}
+select{background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;padding:8px 12px;border-radius:10px;outline:none;cursor:pointer;}
+select:focus{border-color:var(--accent);}
+select option{background:var(--s2);}
+
+/* GENRE PILLS */
+.genre-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
+.gpill{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.gpill:hover{border-color:var(--accent);color:var(--accent);}
+.gpill.on{background:var(--accent);color:#060610;border-color:var(--accent);font-weight:600;}
+
+/* TABS */
+.tabs{display:flex;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.tab{padding:10px 20px;font-size:.85rem;font-weight:500;color:var(--muted2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.tab:hover{color:var(--text);}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-badge{display:inline-block;background:var(--s3);border-radius:100px;padding:1px 7px;font-size:.65rem;font-family:'Space Mono',monospace;color:var(--muted);margin-left:6px;}
+
+/* LIST */
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.count-label{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);}
+.station-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.station-row{background:var(--s1);border:1px solid var(--border);border-radius:13px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;}
+.station-row:hover{border-color:rgba(0,245,160,.35);transform:translateX(3px);}
+.station-row.on{border-color:var(--accent);background:rgba(0,245,160,.04);}
+.row-art{width:44px;height:44px;border-radius:10px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden;}
+.row-art img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+.row-info{flex:1;min-width:0;}
+.row-name{font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-meta{font-size:.75rem;color:var(--muted2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.votes{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);}
+.row-fav{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1rem;transition:color .2s;padding:4px;line-height:1;}
+.row-fav:hover{color:var(--red);}
+.row-fav.on{color:var(--red);}
+.playing-anim{display:flex;align-items:flex-end;gap:2px;height:16px;}
+.playing-anim span{width:3px;background:var(--accent);border-radius:2px;animation:barA .6s ease-in-out infinite alternate;}
+.playing-anim span:nth-child(2){animation-duration:.9s;animation-delay:.15s;}
+.playing-anim span:nth-child(3){animation-duration:.7s;animation-delay:.3s;}
+
+.btn-more{width:100%;padding:13px;background:var(--s1);border:1px solid var(--border);border-radius:12px;color:var(--muted2);font-family:'Outfit',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s;margin-bottom:20px;}
+.btn-more:hover{border-color:var(--accent2);color:var(--accent2);}
+
+/* STREAM STATUS */
+.station-row.stream-offline{opacity:.45;}
+.station-row.stream-offline .row-name{color:var(--muted);}
+.station-row.stream-offline .row-meta{color:var(--muted);}
+.station-row.stream-offline .row-art{filter:grayscale(1);opacity:.5;}
+.stream-badge{font-family:'Space Mono',monospace;font-size:.58rem;padding:2px 7px;border-radius:100px;white-space:nowrap;}
+.stream-badge.checking{color:var(--muted);border:1px solid var(--border);animation:blink .8s infinite;}
+.stream-badge.offline{color:var(--muted);border:1px solid var(--border2);}
+.stream-check-bar{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:.75rem;color:var(--muted2);font-family:'Space Mono',monospace;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.check-progress{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.check-progress-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .3s;}
+
+.spinner{text-align:center;padding:48px;color:var(--muted);font-family:'Space Mono',monospace;font-size:.75rem;}
+.spin{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:48px;color:var(--muted);font-size:.85rem;}
+
+footer{text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:2px;padding:20px 0;border-top:1px solid var(--border);margin-top:20px;}
+@media(max-width:600px){.player-top{flex-direction:column;}.controls{gap:10px;}.search-row{flex-direction:column;}.btn-search{width:100%;}}
+</style>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="my world radio">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#7c3aed">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>{
+        navigator.serviceWorker.register('./service-worker.js');
+      });
+    }
+    window.addEventListener('beforeinstallprompt',e=>{
+      e.preventDefault();
+      window._pwaE=e;
+      var b=document.createElement('div');
+      b.style='position:fixed;bottom:0;left:0;right:0;background:#7c3aed;color:#fff;padding:18px;text-align:center;z-index:9999;font-size:15px;font-weight:bold;cursor:pointer;font-family:sans-serif;';
+      b.innerHTML='📲 홈화면에 앱 추가하기 · Add to Home Screen';
+      b.onclick=async function(){window._pwaE.prompt();var r=await window._pwaE.userChoice;if(r.outcome==='accepted')b.remove();};
+      document.body.appendChild(b);
+    });
+  </script>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div>
+    <div class="logo">ÆTHER RADIO</div>
+    <div class="logo-sub">// RADIO BROWSER API · 30,000+ STATIONS WORLDWIDE</div>
+  </div>
+  <div class="live-badge">
+    <div class="live-dot" id="liveDot"></div>
+    <span id="liveText">OFFLINE</span>
+  </div>
+</header>
+
+<!-- NOW PLAYING -->
+<div class="player-card">
+  <div class="player-top">
+    <div class="station-art" id="playerArt">📻</div>
+    <div class="player-info">
+      <div class="np-tag">// NOW PLAYING</div>
+      <div class="np-name" id="npName">채널을 선택하세요</div>
+      <div class="np-meta" id="npMeta">아래에서 방송국을 골라 시작하세요</div>
+      <div class="np-tags" id="npTags"></div>
+      <div class="track-wrap" id="trackWrap">
+        <div class="track-label">// ON AIR NOW</div>
+        <div class="track-title" id="trackTitle"><span class="track-spin"></span>곡 정보 가져오는 중...</div>
+        <div class="track-artist" id="trackArtist"></div>
+      </div>
+    </div>
+  </div>
+  <div class="viz-wrap">
+    <canvas id="viz" height="48"></canvas>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="ctrl-left">
+    <button class="btn-play" id="btnPlay" onclick="togglePlay()">
+      <svg id="playIco" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+    </button>
+    <button class="btn-stop" onclick="stopPlay()" title="정지">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    </button>
+  </div>
+  <div class="vol-wrap">
+    <svg class="vol-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </svg>
+    <input type="range" id="volSlider" min="0" max="100" value="80" oninput="setVol(this.value)">
+    <span class="vol-num" id="volNum">80%</span>
+  </div>
+  <button class="btn-fav" id="btnFav" onclick="toggleCurFav()" title="즐겨찾기">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  </button>
+</div>
+<div class="error-bar" id="errBar">⚠ 스트림 연결 실패. 다른 채널을 시도하거나 잠시 후 다시 시도해보세요.</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab on" id="tabBrowse" onclick="switchTab('browse')">탐색 <span class="tab-badge" id="browseCount">—</span></div>
+  <div class="tab" id="tabFavs" onclick="switchTab('favs')">즐겨찾기 <span class="tab-badge" id="favCount">0</span></div>
+</div>
+
+<!-- BROWSE -->
+<div id="paneBrowse">
+  <div class="search-row">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="방송국 이름 검색..." onkeydown="if(event.key==='Enter')doSearch()">
+    </div>
+    <button class="btn-search" id="btnSearch" onclick="doSearch()">검색</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">FILTER</span>
+    <select id="selCountry" onchange="doSearch()"><option value="">🌍 모든 국가</option></select>
+    <select id="selOrder" onchange="doSearch()">
+      <option value="votes">인기순</option>
+      <option value="clickcount">클릭수</option>
+      <option value="name">이름순</option>
+      <option value="bitrate">음질순</option>
+    </select>
+  </div>
+  <div class="genre-pills" id="genrePills"></div>
+  <div class="section-hd">
+    <div class="section-title">// 채널 목록</div>
+    <div class="count-label" id="countLabel"></div>
+  </div>
+  <div class="stream-check-bar" id="streamCheckBar" style="display:none">
+    <span id="streamCheckText">스트림 확인 중...</span>
+    <div class="check-progress"><div class="check-progress-inner" id="streamCheckProgress" style="width:0%"></div></div>
+    <span id="streamCheckCount" style="flex-shrink:0"></span>
+  </div>
+  <div id="stationList" class="station-list"></div>
+  <button class="btn-more" id="btnMore" onclick="loadMore()" style="display:none">+ 더 불러오기</button>
+</div>
+
+<!-- FAVS -->
+<div id="paneFavs" style="display:none">
+  <div class="section-hd">
+    <div class="section-title">// 즐겨찾기</div>
+    <div class="count-label" id="favCountLabel">0개</div>
+  </div>
+  <div id="favList" class="station-list"></div>
+</div>
+
+<footer>ÆTHER RADIO &nbsp;·&nbsp; DATA: RADIO-BROWSER.INFO (CC0 PUBLIC DOMAIN) &nbsp;·&nbsp; PERSONAL USE ONLY</footer>
+</div>
+
+<audio id="audioEl" crossorigin="anonymous"></audio>
+
+<script>
+// ── STATE
+let curStation=null, isPlaying=false;
+let favorites=JSON.parse(localStorage.getItem('aether_favs')||'[]');
+let allResults=[], displayCount=30, apiBase='', activeGenre='', activeTab='browse';
+let streamStatus={}; // uuid -> 'ok' | 'offline' | 'checking'
+let checkAbortController=null;
+const audio=document.getElementById('audioEl');
+
+// ── TRACK INFO POLLING
+let trackPollTimer=null;
+let lastTrackTitle='';
+let trackFailCount=0;
+
+function startTrackPolling(){
+  stopTrackPolling();
+  trackFailCount=0;
+  fetchTrackInfo();
+  trackPollTimer=setInterval(fetchTrackInfo,12000);
+}
+
+function stopTrackPolling(){
+  if(trackPollTimer){clearInterval(trackPollTimer);trackPollTimer=null;}
+  lastTrackTitle='';
+  trackFailCount=0;
+  const wrap=document.getElementById('trackWrap');
+  if(wrap)wrap.classList.remove('show');
+}
+
+// Parse "Artist - Title" or raw title string
+function parseTrackString(str){
+  if(!str)return{title:'',artist:''};
+  str=str.trim();
+  // Skip generic stream labels
+  if(/^(stream|radio|live|unknown|n\/a|-+)$/i.test(str))return{title:'',artist:''};
+  const dash=str.indexOf(' - ');
+  if(dash>0){
+    return{artist:str.slice(0,dash).trim(),title:str.slice(dash+3).trim()};
+  }
+  return{title:str,artist:''};
+}
+
+// Render track info in the UI (with fade animation on change)
+function showTrack(raw, artistOverride){
+  if(!curStation||!isPlaying)return;
+  const {title,artist}=artistOverride!==undefined
+    ?{title:raw,artist:artistOverride}
+    :parseTrackString(raw);
+  if(!title&&!artist){showTrackUnavailable();return;}
+  trackFailCount=0;
+  const wrap=document.getElementById('trackWrap');
+  const titleEl=document.getElementById('trackTitle');
+  const artistEl=document.getElementById('trackArtist');
+  if(title===lastTrackTitle){
+    wrap.classList.add('show');
+    return;
+  }
+  // Fade out → update → fade in
+  wrap.style.opacity='0';
+  setTimeout(()=>{
+    titleEl.textContent=title||'—';
+    artistEl.textContent=artist||'';
+    artistEl.style.display=artist?'block':'none';
+    lastTrackTitle=title;
+    wrap.classList.add('show');
+    wrap.style.opacity='';
+  },220);
+}
+
+function showTrackUnavailable(){
+  trackFailCount++;
+  if(trackFailCount<3)return; // Wait a few attempts before showing "unavailable"
+  const wrap=document.getElementById('trackWrap');
+  const titleEl=document.getElementById('trackTitle');
+  const artistEl=document.getElementById('trackArtist');
+  titleEl.textContent='곡 정보를 제공하지 않는 방송국입니다';
+  artistEl.style.display='none';
+  wrap.classList.add('show');
+}
+
+// CORS proxy helper
+async function proxiedGet(url){
+  const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}&disableCache=true`,{signal:AbortSignal.timeout(6000)});
+  const d=await r.json();
+  return d?.contents||null;
+}
+
+async function fetchTrackInfo(){
+  if(!curStation||!isPlaying)return;
+  const streamUrl=curStation.url_resolved||curStation.url;
+  if(!streamUrl)return;
+
+  let base;
+  try{base=new URL(streamUrl);}catch{return;}
+  const origin=`${base.protocol}//${base.host}`;
+  const port=base.port;
+  const hostPort=port?`${base.protocol}//${base.hostname}:${port}`:`${base.protocol}//${base.host}`;
+
+  // ── Method 1: Icecast /status-json.xsl
+  try{
+    const txt=await proxiedGet(`${origin}/status-json.xsl`);
+    if(txt){
+      const json=JSON.parse(txt);
+      const src=json?.icestats?.source;
+      if(src){
+        const sources=Array.isArray(src)?src:[src];
+        // Match by mount point path, fallback to first source
+        const mount=sources.find(s=>{
+          const lu=s.listenurl||'';
+          return streamUrl.endsWith(lu.replace(/.*\/\//,'').replace(/[^/]+/,''));
+        })||sources[0];
+        const raw=[mount?.artist,mount?.title].filter(Boolean).join(' - ')||mount?.title||mount?.artist||'';
+        if(raw){showTrack(raw);return;}
+      }
+    }
+  }catch{}
+
+  // ── Method 2: Shoutcast /currentsong
+  try{
+    const txt=await proxiedGet(`${hostPort}/currentsong`);
+    if(txt&&txt.trim()&&!/<html/i.test(txt)){
+      const song=txt.trim();
+      if(song&&song!=='-'&&song.length<200){showTrack(song);return;}
+    }
+  }catch{}
+
+  // ── Method 3: Shoutcast /7.html (CSV stats, col 7 = song title)
+  try{
+    const txt=await proxiedGet(`${hostPort}/7.html`);
+    if(txt){
+      const plain=txt.replace(/<[^>]+>/g,'');
+      const parts=plain.split(',');
+      if(parts.length>=7){
+        const song=parts.slice(6).join(',').trim();
+        if(song&&song!=='-'&&song.length<200){showTrack(song);return;}
+      }
+    }
+  }catch{}
+
+  // ── Method 4: Shoutcast v2 /stats?sid=1 (XML)
+  try{
+    const txt=await proxiedGet(`${hostPort}/stats?sid=1`);
+    if(txt){
+      const m=txt.match(/<SONGTITLE>(.*?)<\/SONGTITLE>/i);
+      if(m&&m[1]&&m[1].trim()){showTrack(m[1].trim());return;}
+    }
+  }catch{}
+
+  // ── Method 5: Icecast /status.xsl (HTML scrape)
+  try{
+    const txt=await proxiedGet(`${origin}/status.xsl`);
+    if(txt){
+      // Look for "Current Song:" label
+      const m=txt.match(/Current Song.*?<td[^>]*>(.*?)<\/td>/is);
+      if(m&&m[1]){
+        const song=m[1].replace(/<[^>]+>/g,'').trim();
+        if(song&&song!=='-'){showTrack(song);return;}
+      }
+    }
+  }catch{}
+
+  // ── Method 6: ICY metadata via stream partial fetch (works on some servers)
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),5000);
+    const r=await fetch(streamUrl,{
+      method:'GET',
+      headers:{'Icy-MetaData':'1','Range':'bytes=0-8191'},
+      signal:ctrl.signal,
+      mode:'cors'
+    });
+    clearTimeout(tid);
+    const buf=await r.arrayBuffer();
+    const text=new TextDecoder('utf-8',{fatal:false}).decode(buf);
+    const m=text.match(/StreamTitle='([^';]+)'/);
+    if(m&&m[1]&&m[1].trim()){showTrack(m[1].trim());return;}
+  }catch{}
+
+  showTrackUnavailable();
+}
+
+// ── VISUALIZER (Web Audio API + Canvas)
+const vizCanvas = document.getElementById('viz');
+const vizCtx = vizCanvas.getContext('2d');
+let audioCtx = null, analyser = null, sourceNode = null, vizRaf = null;
+let vizFallbackRaf = null;
+// Fake bar heights for fallback animation
+const fakeHeights = Array.from({length:60},()=>({cur:2,target:2,vel:0}));
+
+function initAudioContext(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  analyser.smoothingTimeConstant = 0.8;
+}
+
+function connectAudio(){
+  try{
+    initAudioContext();
+    if(sourceNode){ try{sourceNode.disconnect();}catch{} }
+    sourceNode = audioCtx.createMediaElementSource(audio);
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    return true;
+  }catch(e){
+    // CORS or already connected — fall back to fake viz
+    return false;
+  }
+}
+
+function resizeCanvas(){
+  const w = vizCanvas.parentElement.clientWidth;
+  vizCanvas.width = w * (window.devicePixelRatio||1);
+  vizCanvas.height = 48 * (window.devicePixelRatio||1);
+  vizCanvas.style.width = w+'px';
+  vizCanvas.style.height = '48px';
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function drawRealViz(){
+  if(!analyser||!isPlaying){stopViz();return;}
+  const buf = new Uint8Array(analyser.frequencyBinCount); // 128 bins
+  analyser.getByteFrequencyData(buf);
+
+  const W = vizCanvas.width, H = vizCanvas.height;
+  vizCtx.clearRect(0,0,W,H);
+
+  const barCount = 60;
+  const gap = 2 * (window.devicePixelRatio||1);
+  const barW = (W - gap*(barCount-1)) / barCount;
+
+  // Map FFT bins → bar count (logarithmic-ish distribution, focus on bass/mids)
+  const binCount = buf.length;
+  const grad = vizCtx.createLinearGradient(0, H, 0, 0);
+  grad.addColorStop(0,'#00f5a0');
+  grad.addColorStop(0.5,'#00c8ff');
+  grad.addColorStop(1,'rgba(0,200,255,0.3)');
+
+  for(let i=0;i<barCount;i++){
+    // Log-scale bin mapping: emphasise lower frequencies
+    const binIdx = Math.floor(Math.pow(i/barCount, 1.5) * binCount * 0.75);
+    const val = buf[Math.min(binIdx, binCount-1)] / 255;
+    const barH = Math.max(2*(window.devicePixelRatio||1), val * H * 0.95);
+    const x = i*(barW+gap);
+    const y = H - barH;
+
+    vizCtx.fillStyle = grad;
+    // Rounded top
+    vizCtx.beginPath();
+    const r = Math.min(barW/2, 2*(window.devicePixelRatio||1));
+    vizCtx.moveTo(x+r, y);
+    vizCtx.lineTo(x+barW-r, y);
+    vizCtx.quadraticCurveTo(x+barW, y, x+barW, y+r);
+    vizCtx.lineTo(x+barW, H);
+    vizCtx.lineTo(x, H);
+    vizCtx.lineTo(x, y+r);
+    vizCtx.quadraticCurveTo(x, y, x+r, y);
+    vizCtx.closePath();
+    vizCtx.fill();
+
+    // Glow on tall bars
+    if(val > 0.6){
+      vizCtx.globalAlpha = (val-0.6)/0.4 * 0.35;
+      vizCtx.fillStyle = '#00f5a0';
+      vizCtx.fillRect(x, y-2*(window.devicePixelRatio||1), barW, 2*(window.devicePixelRatio||1));
+      vizCtx.globalAlpha = 1;
+    }
+  }
+
+  vizRaf = requestAnimationFrame(drawRealViz);
+}
+
+function drawFakeViz(){
+  const W = vizCanvas.width, H = vizCanvas.height;
+  vizCtx.clearRect(0,0,W,H);
+  const barCount = fakeHeights.length;
+  const gap = 2*(window.devicePixelRatio||1);
+  const barW = (W - gap*(barCount-1)) / barCount;
+  const grad = vizCtx.createLinearGradient(0,H,0,0);
+  grad.addColorStop(0,'#00f5a0');
+  grad.addColorStop(0.5,'#00c8ff');
+  grad.addColorStop(1,'rgba(0,200,255,0.3)');
+
+  fakeHeights.forEach((b,i)=>{
+    // Spring physics toward random target
+    if(isPlaying && Math.random()<0.04) b.target = (2 + Math.random()*Math.random()*H*0.85);
+    if(!isPlaying) b.target = 2*(window.devicePixelRatio||1);
+    const spring=0.12, damping=0.75;
+    b.vel = (b.vel + (b.target - b.cur)*spring)*damping;
+    b.cur = Math.max(2*(window.devicePixelRatio||1), b.cur + b.vel);
+
+    const x = i*(barW+gap);
+    const barH = b.cur;
+    const y = H - barH;
+    const r = Math.min(barW/2, 2*(window.devicePixelRatio||1));
+    vizCtx.fillStyle = grad;
+    vizCtx.beginPath();
+    vizCtx.moveTo(x+r,y);vizCtx.lineTo(x+barW-r,y);
+    vizCtx.quadraticCurveTo(x+barW,y,x+barW,y+r);
+    vizCtx.lineTo(x+barW,H);vizCtx.lineTo(x,H);vizCtx.lineTo(x,y+r);
+    vizCtx.quadraticCurveTo(x,y,x+r,y);
+    vizCtx.closePath();
+    vizCtx.fill();
+  });
+
+  vizFallbackRaf = requestAnimationFrame(drawFakeViz);
+}
+
+function startViz(){
+  cancelAnimationFrame(vizRaf);
+  cancelAnimationFrame(vizFallbackRaf);
+  resizeCanvas();
+  const realOk = connectAudio();
+  if(realOk){
+    drawRealViz();
+  } else {
+    // CORS stream — use spring-physics fake viz (still looks great)
+    drawFakeViz();
+  }
+}
+
+function stopViz(){
+  cancelAnimationFrame(vizRaf);
+  cancelAnimationFrame(vizFallbackRaf);
+  // Draw flat bars
+  const W=vizCanvas.width,H=vizCanvas.height;
+  vizCtx.clearRect(0,0,W,H);
+  const barCount=60, gap=2*(window.devicePixelRatio||1);
+  const barW=(W-gap*(barCount-1))/barCount;
+  vizCtx.fillStyle='#252538';
+  for(let i=0;i<barCount;i++){
+    vizCtx.fillRect(i*(barW+gap),H-2*(window.devicePixelRatio||1),barW,2*(window.devicePixelRatio||1));
+  }
+}
+
+// ── API
+async function getApiBase(){
+  try{
+    const r=await fetch('https://all.api.radio-browser.info/json/servers');
+    const servers=await r.json();
+    apiBase=`https://${servers[Math.floor(Math.random()*servers.length)].name}`;
+  }catch{apiBase='https://de1.api.radio-browser.info';}
+}
+
+async function apiFetch(path){
+  if(!apiBase)await getApiBase();
+  const r=await fetch(`${apiBase}${path}`,{headers:{'User-Agent':'AetherRadio/1.0'}});
+  return r.json();
+}
+
+async function fetchStations(params={}){
+  const q=new URLSearchParams({limit:300,hidebroken:true,order:params.order||'votes',reverse:true,...params});
+  return apiFetch(`/json/stations/search?${q}`);
+}
+
+// ── GENRES
+const GENRES=[
+  {label:'전체',tag:''},{label:'🎷 Jazz',tag:'jazz'},{label:'🎸 Rock',tag:'rock'},
+  {label:'🎵 Pop',tag:'pop'},{label:'🎛 Electronic',tag:'electronic'},
+  {label:'🎻 Classical',tag:'classical'},{label:'🌙 Chill',tag:'chill'},
+  {label:'🎤 Hip-Hop',tag:'hiphop'},{label:'🌍 World',tag:'world'},
+  {label:'📰 News',tag:'news'},{label:'🗣 Talk',tag:'talk'},
+  {label:'🌊 Ambient',tag:'ambient'},{label:'🤘 Metal',tag:'metal'},
+  {label:'🎺 Blues',tag:'blues'},{label:'🪕 Country',tag:'country'},
+  {label:'🇰🇷 Korean',tag:'korean'},
+];
+
+function buildGenrePills(){
+  const el=document.getElementById('genrePills');
+  GENRES.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='gpill'+(g.tag===activeGenre?' on':'');
+    b.textContent=g.label;
+    b.onclick=()=>{
+      activeGenre=g.tag;
+      document.querySelectorAll('.gpill').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      doSearch();
+    };
+    el.appendChild(b);
+  });
+}
+
+// ── SEARCH
+async function doSearch(){
+  const q=document.getElementById('searchInput').value.trim();
+  const country=document.getElementById('selCountry').value;
+  const order=document.getElementById('selOrder').value;
+  showLoading();
+  document.getElementById('btnSearch').disabled=true;
+  hideErr();
+  try{
+    let stations;
+    if(!q&&!country&&!activeGenre){
+      stations=await apiFetch(`/json/stations/topvote/300`);
+    } else {
+      const params={order,hidebroken:true};
+      if(q)params.name=q;
+      if(country)params.countrycode=country;
+      if(activeGenre==='korean')params.countrycode='KR';
+      else if(activeGenre)params.tag=activeGenre;
+      stations=await fetchStations(params);
+    }
+    allResults=(stations||[]).filter(s=>s.url_resolved||s.url);
+    streamStatus={}; // reset stream check cache on new search
+    displayCount=30;
+    renderList();
+  }catch(e){
+    document.getElementById('stationList').innerHTML='<div class="empty">⚠ API 연결 오류. 잠시 후 다시 시도해주세요.</div>';
+  }
+  document.getElementById('btnSearch').disabled=false;
+}
+
+function showLoading(){
+  document.getElementById('stationList').innerHTML=`<div class="spinner"><div class="spin"></div><br>불러오는 중...</div>`;
+  document.getElementById('btnMore').style.display='none';
+  document.getElementById('countLabel').textContent='';
+}
+
+// ── STREAM CHECK
+async function checkStream(url, signal){
+  try{
+    // Use fetch with no-cors to probe the stream URL
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),5000);
+    // Try a range request first (common for audio streams)
+    await fetch(url,{method:'GET',mode:'no-cors',signal:ctrl.signal,headers:{'Range':'bytes=0-1'}});
+    clearTimeout(tid);
+    return 'ok';
+  }catch(e){
+    if(e.name==='AbortError')return 'offline';
+    // In no-cors mode, opaque response = server responded = stream likely works
+    if(e.message&&e.message.includes('opaque'))return 'ok';
+    return 'ok'; // no-cors fetch errors are often CORS, not stream down
+  }
+}
+
+async function probeStream(url){
+  // We use an Audio element to actually probe if the stream is playable
+  return new Promise(resolve=>{
+    const a=new Audio();
+    const tid=setTimeout(()=>{
+      a.src='';
+      resolve('offline');
+    },6000);
+    a.oncanplay=()=>{clearTimeout(tid);a.src='';resolve('ok');};
+    a.onerror=()=>{clearTimeout(tid);a.src='';resolve('offline');};
+    a.src=url;
+    a.load();
+  });
+}
+
+async function runStreamChecks(stations){
+  if(checkAbortController)checkAbortController.abort();
+  checkAbortController=new AbortController();
+  const signal=checkAbortController.signal;
+
+  const bar=document.getElementById('streamCheckBar');
+  const prog=document.getElementById('streamCheckProgress');
+  const txt=document.getElementById('streamCheckText');
+  const cnt=document.getElementById('streamCheckCount');
+  bar.style.display='flex';
+
+  const toCheck=stations.slice(0,displayCount);
+  let done=0;
+
+  // Check in batches of 5 concurrent
+  const BATCH=5;
+  for(let i=0;i<toCheck.length;i+=BATCH){
+    if(signal.aborted)break;
+    const batch=toCheck.slice(i,i+BATCH);
+    await Promise.all(batch.map(async s=>{
+      if(signal.aborted)return;
+      const uuid=s.stationuuid;
+      if(streamStatus[uuid])return; // already checked
+      streamStatus[uuid]='checking';
+      const url=s.url_resolved||s.url;
+      const result=await probeStream(url);
+      if(!signal.aborted){
+        streamStatus[uuid]=result;
+        done++;
+        const pct=Math.round(done/toCheck.length*100);
+        prog.style.width=pct+'%';
+        cnt.textContent=`${done}/${toCheck.length}`;
+        // Update only the affected row without full re-render
+        const row=document.querySelector(`[data-uuid="${uuid}"]`);
+        if(row)applyStreamStyle(row,result);
+      }
+    }));
+  }
+
+  if(!signal.aborted){
+    const offlineCount=toCheck.filter(s=>streamStatus[s.stationuuid]==='offline').length;
+    txt.textContent=`✓ 스트림 확인 완료 · ${toCheck.length-offlineCount}개 정상 / ${offlineCount}개 오프라인`;
+    prog.style.width='100%';
+    setTimeout(()=>{bar.style.display='none';},4000);
+  }
+}
+
+function applyStreamStyle(row, status){
+  row.classList.remove('stream-offline','stream-checking');
+  const badge=row.querySelector('.stream-badge');
+  if(status==='offline'){
+    row.classList.add('stream-offline');
+    if(badge){badge.textContent='OFFLINE';badge.className='stream-badge offline';}
+  } else if(status==='checking'){
+    if(badge){badge.textContent='···';badge.className='stream-badge checking';}
+  } else {
+    if(badge){badge.remove();}
+  }
+}
+
+
+function renderList(){
+  const list=document.getElementById('stationList');
+  const shown=allResults.slice(0,displayCount);
+  document.getElementById('countLabel').textContent=`${allResults.length.toLocaleString()}개 중 ${shown.length}개 표시`;
+  document.getElementById('browseCount').textContent=allResults.length>999?'999+':allResults.length;
+  if(!shown.length){list.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';return;}
+  list.innerHTML='';
+  shown.forEach(s=>list.appendChild(makeRow(s)));
+  document.getElementById('btnMore').style.display=allResults.length>displayCount?'block':'none';
+  // Trigger stream check for newly rendered rows
+  runStreamChecks(shown);
+}
+
+function loadMore(){
+  displayCount=Math.min(displayCount+30,allResults.length);
+  renderList();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function makeRow(s){
+  const isFav=favorites.some(f=>f.stationuuid===s.stationuuid);
+  const isCur=curStation&&curStation.stationuuid===s.stationuuid;
+  const status=streamStatus[s.stationuuid]||'';
+  const div=document.createElement('div');
+  div.className='station-row'+(isCur?' on':'')+(status==='offline'?' stream-offline':'');
+  div.setAttribute('data-uuid',s.stationuuid);
+  const artHtml=s.favicon
+    ?`<img src="${esc(s.favicon)}" onerror="this.parentNode.textContent='📻'" alt="">`
+    :'📻';
+  const meta=[s.country,s.tags?.split(',')[0]?.trim(),s.bitrate?s.bitrate+'kbps':''].filter(Boolean).join(' · ');
+  const streamBadgeHtml=status==='offline'
+    ?'<span class="stream-badge offline">OFFLINE</span>'
+    :status==='checking'
+    ?'<span class="stream-badge checking">···</span>'
+    :'';
+  div.innerHTML=`
+    <div class="row-art">${artHtml}</div>
+    <div class="row-info">
+      <div class="row-name">${esc(s.name)}</div>
+      <div class="row-meta">${esc(meta)}</div>
+    </div>
+    <div class="row-right">
+      ${isCur&&isPlaying?'<div class="playing-anim"><span style="height:5px"></span><span style="height:12px"></span><span style="height:7px"></span></div>':''}
+      ${streamBadgeHtml}
+      <span class="votes">▲${(s.votes||0).toLocaleString()}</span>
+      <button class="row-fav${isFav?' on':''}" title="즐겨찾기">${isFav?'♥':'♡'}</button>
+    </div>`;
+  div.querySelector('.row-fav').onclick=e=>{e.stopPropagation();toggleFav(s);};
+  div.onclick=()=>selectStation(s);
+  return div;
+}
+
+// ── PLAYBACK
+function selectStation(s){
+  curStation=s;
+  updatePlayerUI();
+  hideErr();
+  setLive('loading','CONNECTING');
+  audio.src=s.url_resolved||s.url;
+  audio.volume=document.getElementById('volSlider').value/100;
+  audio.load();
+  audio.play().then(()=>{
+    isPlaying=true;setLive('on','LIVE');updatePlayBtn();startViz();
+    startTrackPolling();
+    if(apiBase&&s.stationuuid)fetch(`${apiBase}/json/url/${s.stationuuid}`).catch(()=>{});
+  }).catch(()=>{
+    isPlaying=false;setLive('','OFFLINE');updatePlayBtn();stopViz();showErr();
+    stopTrackPolling();
+  });
+  updatePlayBtn();
+  if(activeTab==='browse')renderList();
+  else renderFavs();
+}
+
+function updatePlayerUI(){
+  const s=curStation;
+  document.getElementById('npName').textContent=s.name||'Unknown';
+  document.getElementById('npMeta').textContent=[s.country,s.language,s.bitrate?s.bitrate+'kbps':''].filter(Boolean).join(' · ')||'—';
+  const art=document.getElementById('playerArt');
+  art.innerHTML=s.favicon?`<img src="${esc(s.favicon)}" onerror="this.parentNode.textContent='📻'" alt="">`:'📻';
+  const tagsEl=document.getElementById('npTags');
+  tagsEl.innerHTML='';
+  (s.tags||'').split(',').slice(0,4).forEach(t=>{
+    t=t.trim();if(!t)return;
+    const p=document.createElement('span');p.className='np-tag-pill';p.textContent=t;tagsEl.appendChild(p);
+  });
+  // Reset track info for new station - show loading spinner
+  const trackWrap=document.getElementById('trackWrap');
+  trackWrap.style.opacity='';
+  trackWrap.classList.add('show');
+  document.getElementById('trackTitle').innerHTML='<span class="track-spin"></span>곡 정보 가져오는 중...';
+  document.getElementById('trackArtist').textContent='';
+  document.getElementById('trackArtist').style.display='none';
+  lastTrackTitle='';
+  updateFavBtn();
+}
+
+function togglePlay(){
+  if(!curStation)return;
+  if(isPlaying){audio.pause();isPlaying=false;setLive('','PAUSED');stopViz();stopTrackPolling();}
+  else{audio.play().then(()=>{isPlaying=true;setLive('on','LIVE');startViz();startTrackPolling();}).catch(()=>selectStation(curStation));}
+  updatePlayBtn();
+  if(activeTab==='browse')renderList();else renderFavs();
+}
+
+function stopPlay(){
+  audio.pause();audio.src='';isPlaying=false;setLive('','OFFLINE');stopViz();stopTrackPolling();updatePlayBtn();
+  if(activeTab==='browse')renderList();else renderFavs();
+}
+
+function updatePlayBtn(){
+  document.getElementById('playIco').innerHTML=isPlaying
+    ?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+    :'<polygon points="5,3 19,12 5,21"/>';
+}
+
+function setVol(v){audio.volume=v/100;document.getElementById('volNum').textContent=v+'%';}
+function setLive(cls,txt){
+  const d=document.getElementById('liveDot');
+  d.className='live-dot'+(cls?' '+cls:'');
+  document.getElementById('liveText').textContent=txt;
+}
+function showErr(){document.getElementById('errBar').classList.add('show');}
+function hideErr(){document.getElementById('errBar').classList.remove('show');}
+
+audio.addEventListener('error',()=>{
+  if(curStation){setLive('','OFFLINE');isPlaying=false;stopViz();updatePlayBtn();showErr();}
+});
+
+// ── FAVORITES
+function toggleFav(s){
+  const idx=favorites.findIndex(f=>f.stationuuid===s.stationuuid);
+  if(idx>=0)favorites.splice(idx,1);else favorites.unshift(s);
+  localStorage.setItem('aether_favs',JSON.stringify(favorites));
+  updateFavBtn();
+  document.getElementById('favCount').textContent=favorites.length;
+  document.getElementById('favCountLabel').textContent=`${favorites.length}개`;
+  if(activeTab==='browse')renderList();else renderFavs();
+}
+
+function toggleCurFav(){if(curStation)toggleFav(curStation);}
+
+function updateFavBtn(){
+  const on=curStation&&favorites.some(f=>f.stationuuid===curStation.stationuuid);
+  document.getElementById('btnFav').classList.toggle('on',!!on);
+}
+
+function renderFavs(){
+  const list=document.getElementById('favList');
+  document.getElementById('favCount').textContent=favorites.length;
+  document.getElementById('favCountLabel').textContent=`${favorites.length}개`;
+  if(!favorites.length){list.innerHTML='<div class="empty">♥ 버튼으로 즐겨찾기에 추가하세요</div>';return;}
+  list.innerHTML='';
+  favorites.forEach(s=>list.appendChild(makeRow(s)));
+}
+
+// ── TABS
+function switchTab(tab){
+  activeTab=tab;
+  document.getElementById('paneBrowse').style.display=tab==='browse'?'block':'none';
+  document.getElementById('paneFavs').style.display=tab==='favs'?'block':'none';
+  document.getElementById('tabBrowse').classList.toggle('on',tab==='browse');
+  document.getElementById('tabFavs').classList.toggle('on',tab==='favs');
+  if(tab==='favs')renderFavs();
+}
+
+// ── COUNTRIES
+async function loadCountries(){
+  try{
+    const list=await apiFetch('/json/countries?order=stationcount&reverse=true&limit=100');
+    const sel=document.getElementById('selCountry');
+    const priority=['KR','US','GB','JP','DE','FR','CA','AU'];
+    const sorted=[...list].sort((a,b)=>{
+      const ai=priority.indexOf(a.iso_3166_1),bi=priority.indexOf(b.iso_3166_1);
+      if(ai>=0&&bi<0)return -1;if(bi>=0&&ai<0)return 1;
+      if(ai>=0&&bi>=0)return ai-bi;return 0;
+    });
+    sorted.forEach(c=>{
+      if(!c.name)return;
+      const o=document.createElement('option');
+      o.value=c.iso_3166_1;o.textContent=`${c.name} (${c.stationcount})`;
+      sel.appendChild(o);
+    });
+  }catch{}
+}
+
+// ── INIT
+async function init(){
+  buildGenrePills();
+  showLoading();
+  await getApiBase();
+  await loadCountries();
+  try{
+    const top=await apiFetch('/json/stations/topvote/300');
+    allResults=(top||[]).filter(s=>s.url_resolved||s.url);
+    displayCount=30;renderList();
+  }catch{
+    document.getElementById('stationList').innerHTML='<div class="empty">⚠ 서버 연결 실패. 새로고침 후 시도해주세요.</div>';
+  }
+  document.getElementById('favCount').textContent=favorites.length;
+  document.getElementById('favCountLabel').textContent=`${favorites.length}개`;
+}
+init();
+</script>
+</body>
+</html>
